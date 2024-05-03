@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIF-TODOS</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.css">
+
+    <link rel="stylesheet" href="css/app.css">
+    <script type="application/javascript" src="js/api-base.js"></script>
+    <script defer type="application/javascript" src="js/spa.js"></script>
+    <script defer type="application/javascript" src="js/table_sort.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mustache@4.0.1/mustache.min.js"></script>
+</head>
+
+<body>
+
+    <header>
+        <h1 class="header-titre">MIF-TODOS</h1>
+        <div class="requiresConnection wrapper">
+            <p class="header-user">Bonjour <strong id="username"></strong></p>
+            <p class="header-deco"><a href='#deco'>Déconnexion</a></p>
+        </div>
+
+        <script id="usernameBonjourTemplate" type="text/template">
+            {{ username }}
+        </script>
+    </header>
+
+    <div class="wrapper">
+        <aside class="menu">
+            <h2>Menu</h2>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a href='#index'>Accueil</a></li>
+                <li class="requiresDisconnection nav-item"><a href='#connect'>Connexion</a></li>
+                <li class="requiresConnection nav-item"><a href='#monCompte'>Mon compte</a></li>
+                <li class="requiresConnection nav-item"><a href='#todoList'>Todos</a></li>
+            </ul>
+        </aside>
+        <article class="contenu">
+            <section id='index' class="active">
+                <div id="requestResult-general" class="alert"></div>
+                <script id="userCountTemplate" type="text/template">{{nbUsers}}</script>
+                <h2>L'application des trucs à faire</h2>
+                <p>Actuellement : </script><strong id="nbUsers">...</strong> utilisateurs inscrits.</p>
+            </section>
+
+
+
+            <section id='connect' class='inactive'>
+                <h2>Connectez-vous pour accéder aux todos</h2>
+                <table>
+                    <tr>
+                        <td><label for="login_input">Login :</label></td>
+                        <td><input class="form-control" type="text" id="login_input"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="password_input">Mot de passe :</label></td>
+                        <td><input class="form-control" type="password" id="password_input"></td>
+                    </tr>
+                    <tr>
+                        <td><button type="button" class="btn btn-secondary" id="login_button"
+                                onclick="connect()">Connexion</button></td>
+                    </tr>
+                </table>
+            </section>
+
+            <section id='deco' class='inactive'>
+                <h2>Déconnexion</h2>
+                <p>Cliquez ici pour vous déconnecter :
+                    <button type="button" class="btn btn-secondary" id="logout_button"
+                        onclick="deco()">Déconnexion</button>
+                </p>
+            </section>
+
+            <section id='monCompte' class='inactive'>
+                <h2>Mon compte</h2>
+                <table id='compteList'>
+                    <tr>
+                        <td>Login : </td>
+                        <td><span id="login"></span></td>
+                    </tr>
+
+                    <script id="userLoginTemplate" type="text/template">
+                    {{ login }}
+                </script>
+
+                    <tr>
+                        <td>Nom : </td>
+                        <td><span id="nom_update_input" contenteditable="true"></span></td>
+                        <script id="userNameTemplate" type="text/template">
+                        {{ nom_update_input }}
+                    </script>
+                        <td><button type="button" class="btn btn-secondary" id="user_update_button"
+                                onclick="majNom()">Modifier</button></td>
+                    </tr>
+                    <tr>
+                        <td><label for="password_update_input">Mot de passe :</label></td>
+                        <td><input class="form-control" type="password" id="password_update_input"></td>
+                        <td><button type="button" class="btn btn-secondary" id="password_update_button"
+                                onclick="majMdp()">Modifier</button></td>
+                    </tr>
+                </table>
+                <div>Assigné à :
+                    <ul id="TodosMonCompte">
+                    </ul>
+                </div>
+            </section>
+
+            <script id="todoMonCompteTemplate" type="text/template">
+                <li style="background-color: #f0f0f0; padding: 10px; margin-bottom: 5px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    {{ title }}
+                </li>
+            </script>
+
+            <section id='todoList' class='inactive'>
+                <h2><strong>Liste des todos</strong></h2>
+                <div id="requestResult-todos" class="alert"></div>
+                <div style="display: flex; align-items: center;">
+                    <p style="margin: 0; margin-right: 10px;">Il y a actuellement <strong id="nbTodos">...</strong>
+                        todo(s).</p>
+                    <span style="margin-right: 10px;">Trier par :</span>
+                    <span onclick="trierTableauTodo()"
+                        style="cursor: pointer; color: blue; text-decoration: underline; margin-right: 10px;">
+                        Titre
+                    </span>
+                    <span onclick="trierTableauParAssignee()"
+                        style="cursor: pointer; color: blue; text-decoration: underline; margin-right: 10px;">
+                        Assigné
+                    </span>
+                    <span onclick="deleteAllTodos()" style="cursor: pointer; color: blue; text-decoration: underline;">
+                        Supprimer tous les todos
+                    </span>
+                </div>
+
+                <script id="todosCountTemplate" type="text/template">
+                {{ nbTodos }}
+            </script>
+
+                <div class="list">
+                    <section id='todoListTable'>
+                        <div class="list">
+                            <table id="todoTable">
+                                <thead>
+                                    <tr>
+                                        <th>Etat</th>
+                                        <th>Titre</th>
+                                        <th>Assigné à</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablebody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                </br>
+                </br>
+                <div class="container d-flex">
+                    <div class="row ">
+                        <div class="col-sm-2">
+                            <label class="form-label" for="text">Titre :</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <input class="form-control" type="text" id="text" size="50">
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="button" class="btn btn-secondary" id="addTodo_button"
+                                onclick="creerTodo()">Créer un nouveau todo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="popup"></div>
+            </section>
+
+
+
+            <script id="popupTemplate" type="text/template">
+                <div>
+                    Nom de l'utilisateur: {{username}}
+                </div>
+            </script>
+
+
+            <script id="tableTemplate" type="text/template">
+                <tr id="todoRow_{{todoId}}" class="special">
+                    <td>{{#completed}}<span>&#9745;</span>{{/completed}}
+                        {{^completed}}<span>&#9744;</span>{{/completed}}
+                    </td>
+                    <td onclick="editTitle(this, '{{todoId}}')">{{title}}</td>
+                    <td>
+                        {{#assignee}}
+                        <p onmouseover="getUsername('{{assignee}}', event)" onmouseout="masquerPopup()" style="color:blue; cursor: pointer;">
+                            {{assignee}}</p>
+                        {{/assignee}}
+                        {{^assignee}}
+                        <p>Non assigné</p>
+                        {{/assignee}}
+                    </td>
+                    <td>
+                        {{#Isassignee}}
+                        <button type="button" class="btn btn-secondary {{btn_clickable}}" id="btn_retirer_{{todoId}}" onclick="retirerTodo('{{todoId}}')">
+                            Retirer l'assignation
+                        </button>
+                        {{/Isassignee}}
+                        {{^Isassignee}}
+                        <button type="button" class="btn btn-primary" id="btn_assigner_{{todoId}}" onclick="assignerTodo('{{todoId}}')">
+                            M'assigner ce todo
+                        </button>
+                        {{/Isassignee}}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" id="btn_supprimer_{{todoId}}" onclick="supprimerTodo('{{todoId}}')">
+                            <img src="./assets/trash.svg" alt="Supprimer" width="24" height="24">
+                        </button>
+                    </td>
+                    {{#Isassignee}}
+                    {{#completed}}
+                    <td>
+                        <button type="button" class="btn btn-success" id="btn_status_{{todoId}}" onclick="completerTodo('{{todoId}}')">
+                            Terminer
+                        </button>
+                    </td>
+                    {{/completed}}
+                    {{^completed}}
+                    <td>
+                        <button type="button" class="btn btn-warning" id="btn_status_{{todoId}}" onclick="completerTodo('{{todoId}}')">
+                            En cours
+                        </button>
+                    </td>
+                    {{/completed}}
+                    {{/Isassignee}}
+                </tr>
+            </script>
+        </article>
+    </div>
+
+    <footer>
+        <div>Licence : <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/3.0/fr/"><img
+                    alt="Licence Creative Commons" style="border-width:0; vertical-align:middle;"
+                    src="https://i.creativecommons.org/l/by-nc-sa/3.0/fr/88x31.png" /></a></div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/popper.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+
+</body>
+
+</html>*
